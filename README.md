@@ -8,7 +8,6 @@
 
 [Maya Whitepaper](https://assets.website-files.com/62a14669b65c6aeed054f32e/62b3648681be198a7fd33120_MAYA%20PROTOCOL%20WHITE%20PAPER_.pdf)
 
-
 ## Batch One
 
 ```
@@ -381,4 +380,86 @@ Multiple nodes having an issue with BTC... Maya team confirm with me that my err
 ### 26.05.2023 Friday 1h
 
 Update to fix the above issue. Smooth & all sorted, monitored but uneventful! 
+
+
+## Batch Two
+
+```
+13.06.2023 Tuesday    1.5h
+27.06.2023 Tuesday    1h
+08.07.2023 Saturday   1h 
+10.07.2023 Monday     0.5h 
+18.07.2023 Tuesday    1h
+19.07.2023 Wednesday  0.5h 
+23.07.2023 Sunday     0.5h
+24.07.2023 Monday     0.5h
+25.07.2023 Tuesday    0.5h
+26.07.2023 Wednesday  1h
+28.07.2023 Friday     2h 
+Total                 10h
+```
+
+
+### 13.06.2023 Tuesday 1.5h 
+
+Resolving issues around inability to push dashd-go updates without DCG approval, THORChain originally wanted it in DCGs repo for security reasons but this means a long update loop and hoops to jump. Eventually we just had Maya host the repo as they trust us (for good reason!) and Alex is a maintainer. 
+
+
+### 27.06.2023 Tuesday 1h
+
+Stagenet issues with chainlock and ignored blocks and reconsiderations, we approached this with understanding that the scanner was skipping blocks that didnt have a chainlock and then processing child blocks with a chainlock without reconsidering the ancestor. We had to review the various dips and responses from nodes to understand how a chainlock is kept in memory, responses of ancestors and so on without quite being able to replicate and test. The end implementation was some kind of replay of prior chain... this seemed okay at the time but I suggested a simpler approach (see next log) that ended up being adopted before launch.
+
+### 08.07.2023 Saturday 1h
+
+Reviewed the chainclient ahead of Dash launch and investigated and subsequently made a suggestion to use getbestchainlock instead of chainheight as a simple approach for handling blockheight with regards to orphan chains and ancestor chainlock application instead of recursive checks with exponential backoff.
+
+### 10.07.2023 Monday 0.5h 
+
+Thornode-daemon update and monitoring
+
+### 18.07.2023 Tuesday 1h
+
+Investigating issue with Dash on stagenet, turns out it was due to chainclient expecting an individual chainlock per tx on a getblock request instead of the top-level chainlock: true applying to all txs in the block. 
+
+
+### 19.07.2023 Wednesday 0.5h 
+
+Thornode-daemon update and monitoring
+
+
+### 23.07.2023 Sunday 0.5h
+
+Another update of thornode-daemon image... there was an issue and a halt at THORChain (and also Maya RUNE) so this is to fix that...
+
+
+### 24.07.2023 Monday 0.5h
+
+Did a bit of a cost investigation, found a couple of inactive reserved volumes to delete (should save ~$100/month) 
+
+### 25.07.2023 Tuesday 0.5h
+
+Addition of Dash chainclient ready for launch, some issues to resolve, debugging, monitoring and so on.
+
+
+### 26.07.2023 Wednesday 1h
+
+Dash launch, fixing some node issues, resets, config changes, monitoring.
+
+
+### 28.07.2023 Friday 2h 
+
+Investigating ignored transaction, initial theories are:
+- op_return malformed or on wrong vouts
+- block was ignored due to how we handle chainlocks
+- unexpected response from node on block (ancestor chainlock)
+
+Turned out it was that the op_return was on the wrong vout due to a manually crafted transaction. Found another couple of small transactions like this, Maya team is informing Dash community on manual txs or to wait for more front-ends to add support.
+
+Looked into current hosting bill, forecasted to $2300,  I will to continue to investigate cost savings via migration, greater efficiency or otherwise here... 
+
+Also updated all this log... how meta.
+
+### AWS Bill July
+![aws bill](https://i.imgur.com/QsauHMx.png)
+
 
