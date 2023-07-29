@@ -8,6 +8,10 @@
 
 [Maya Whitepaper](https://assets.website-files.com/62a14669b65c6aeed054f32e/62b3648681be198a7fd33120_MAYA%20PROTOCOL%20WHITE%20PAPER_.pdf)
 
+[Batch One](#batch-one)
+
+[Batch Two](#batch-two)
+
 ## Batch One
 
 ```
