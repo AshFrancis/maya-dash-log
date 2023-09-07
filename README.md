@@ -14,6 +14,11 @@
 
 [AWS Bill July](#aws-bill-july)
 
+[Batch Three](#batch-three)
+
+[AWS Bill August](#aws-bill-august)
+
+
 ## Batch One
 
 ```
@@ -468,4 +473,124 @@ Also updated all this log... how meta.
 ### AWS Bill July
 ![aws bill](https://i.imgur.com/QsauHMx.png)
 
+
+## Batch Three
+
+```
+18.08.2023 15m 
+21.08.2023 15m 
+28.08.2023 2h
+31.08.2023 1h
+Total      3.5h
+```
+
+### 18.08.2023 15m 
+
+Investigating logs for discrepancies. 
+
+### 21.08.2023 15m 
+
+Reported node error from Maya team, turns it wasn't our node.
+
+### 28.08.2023 2h 
+
+Investigating Dash stuck transactions...
+
+#### Dash signer.go vs Bitcoin signer.go diff:
+
+Notes:
+- Doesn't import gitlab.com/mayachain/mayanode/bifrost/tss
+- Unsure why max inputs is set to 15, perhaps this is just a reasonable upper bound... I searched both log files:
+```js
+maxUTXOsToSpend            = 15
+```
+- signUTXO function has significant differences (blame, fail to post keysign, fail to get witness)
+- Dash has an additional function at the bottom (RawTxInSignatureUsingSignable):
+```js
+    func RawTxInSignatureUsingSignable(    
+    tx *wire.MsgTx,    
+    idx int,    
+    subScript []byte,    
+    hashType dashtxscript.SigHashType,    
+    signable bifrosttxscript.Signable,    
+) ([]byte, error) {    
+    hash, err := dashtxscript.CalcSignatureHash(subScript, hashType, tx, idx)    
+    if err != nil {    
+        return nil, err    
+    }    
+    signature, err := signable.Sign(hash)    
+    if err != nil {    
+        return nil, fmt.Errorf("cannot sign tx input: %s", err)    
+    }    
+    return append(signature.Serialize(), byte(hashType)), nil    
+}
+```
+This is called in signUTXO:
+```js
+signable := c.keySignWrapper.GetSignable(tx.VaultPubKey)    
+sig, err := RawTxInSignatureUsingSignable(redeemTx, idx, sourceScript, dashtxscript.SigHashAll, signable)
+```
+
+#### Dash client.go vs Bitcoin client.go diff
+
+- Dash doesn't import golang.org/x/sync/errgroup or golang.org/x/sync/semaphore. This is fine because the Dash client doesn't use or need parallel workers.
+
+- Bitcoin has a lot of reorg logic that Dash doesn't have or need (chainlocks prevent re-org and we only follow them)
+
+- Minor:
+```
+Bitcoin
+return nil, fmt.Errorf("fail to get BASEChain private key: %w", err)
+Dash:
+return nil, fmt.Errorf("fail to get THORChain private key: %w", err)
+
+There is still a lot of use of 'thor...' in both, it doesn't matter but this could be maya/basechain instead.
+
+Also general standardizing between clients, calling things the same name (tendermintPubKey vs temp, asgards vs addresses) is logical but not important
+
+No error logged on Dash for ignored dust tx (perhaps this cant happen; is the dust amount set to min possible fee?) 
+
+No error logged on Dash for failure to get blockhash
+```
+
+- Bitcoin also has some pruning:
+```js
+        pruneHeight := height - BlockCacheSize
+    if pruneHeight > 0 {
+        defer func() {
+            if err := c.temporalStorage.PruneBlockMeta(pruneHeight, c.canDeleteBlock); err != nil {
+                c.logger.Err(err).Msgf("fail to prune block meta, height(%d)", pruneHeight)
+            }
+        }()
+    }
+```
+Perhaps not necessary for Dash as related to confirmations?
+
+- Dash reportSolvency uses DashBlockHeight, however elsewhere we switched to using the best chainlock height; could this be creating a discrepancy?
+
+### 29.08.2023 1h
+
+Continued investigation...
+
+Seeing lots of gas errors:
+
+```
+{"level":"info","service":"bifrost","module":"dash","time":"2023-08-29T22:04:03Z","caller":"/app/bifrost/pkg/chainclients/dash/signer.go:296","message":"max gas: [5016 DASH.DASH], however estimated gas need 33136"}
+```
+
+Comes from here: https://gitlab.com/mayachain/mayanode/-/blob/develop/bifrost/pkg/chainclients/dash/client.go#L472
+
+https://mayanode.mayachain.info/mayachain/inbound_addresses shows a gas rate of 6
+
+Later checks showed it at 16, then 78; this is changing a lot and looks to be calculated 'per block' meaning wild variance. This throws errors on fee estimations...
+
+### 31.08.2023 1h
+
+Feeding back findings to team, discussing and just general issue brainstorming... 
+
+(Alex continues to work on this, I am mostly done here, so see his log I guess for more or the PR to fix it from them)
+
+
+### AWS Bill August
+![Aws Bill August](https://i.imgur.com/0qf5B6J.png)
 
