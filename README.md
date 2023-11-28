@@ -18,6 +18,10 @@
 
 [AWS Bill August](#aws-bill-august)
 
+[AWS Bill September](#aws-bill-september)
+
+[AWS Bill October](#aws-bill-october)
+
 
 ## Batch One
 
@@ -593,4 +597,10 @@ Feeding back findings to team, discussing and just general issue brainstorming..
 
 ### AWS Bill August
 ![Aws Bill August](https://i.imgur.com/0qf5B6J.png)
+
+### AWS Bill September
+![AWS Bill September](https://i.imgur.com/fMUHjCH.png)
+
+### AWS Bill October
+![AWS Bill October](https://i.imgur.com/o4ZswOP.png)
 
